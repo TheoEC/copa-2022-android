@@ -22,6 +22,8 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import dagger.hilt.android.AndroidEntryPoint
+import me.dio.copa.catar.extensions.observe
+import me.dio.copa.catar.notification.scheduler.extensions.NotificationMatcherWorker
 import me.dio.copa.catar.ui.theme.Copa2022Theme
 import me.dio.copa.catar.ui.theme.mainFunctionalitiesButtons
 
@@ -34,58 +36,22 @@ class MainActivity : ComponentActivity() {
         setContent {
             Copa2022Theme {
                 val state by viewModel.state.collectAsState()
-                MainScreen(matches = state.matches)
+                MainScreen(matches = state.matches, onNotificationClick = viewModel::toggleNotification)
+                observeActions()
             }
         }
     }
 
-}
-
-@Composable
-fun Greeting(name: String) {
-    Text(text = "Hello $name!")
-}
-
-@Composable
-@Preview(showBackground = true)
-fun DefaultPreview() {
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(16.dp)
-    ) {
-        Row {
-            Button(
-                onClick = ::GetMatchs,
-                colors = ButtonDefaults.buttonColors(backgroundColor = mainFunctionalitiesButtons)
-            ) {
-                Text(text = "coisa coisosa")
+    fun observeActions() {
+        viewModel.action.observe(this) { action ->
+            when (action) {
+                is MainUiAction.DisableNotificaton ->
+                    NotificationMatcherWorker.cancel(applicationContext, action.match)
+                is MainUiAction.EnableNotificaton ->
+                    NotificationMatcherWorker.start(applicationContext, action.match)
+                is MainUiAction.MatchesNotFound -> TODO()
+                MainUiAction.Unexpected -> TODO()
             }
         }
     }
-}
-
-@Composable
-fun BtnFunctionality(func: Functionality) {
-    Row {
-        Icon(
-            painter = painterResource(id = func.IconID),
-            contentDescription = null
-        )
-
-        Button(onClick = func.Url) {
-            Text(text = func.name)
-        }
-    }
-}
-
-data class Functionality(
-    var name: String,
-    var enabled: Boolean,
-    var IconID: Int,
-    var Url: () -> Unit
-)
-
-fun GetMatchs() {
-
 }

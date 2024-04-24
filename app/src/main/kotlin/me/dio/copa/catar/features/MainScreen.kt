@@ -1,6 +1,7 @@
 package me.dio.copa.catar.features
 
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -11,7 +12,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.Card
@@ -24,7 +24,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import me.dio.copa.catar.R
@@ -33,8 +32,10 @@ import me.dio.copa.catar.domain.model.MatchDomain
 import me.dio.copa.catar.domain.model.Team
 import me.dio.copa.catar.ui.theme.Shapes
 
+typealias NotificationOnClick = (match: MatchDomain) -> Unit
+
 @Composable
-fun MainScreen(matches: List<MatchDomain>) {
+fun MainScreen(matches: List<MatchDomain>, onNotificationClick: NotificationOnClick) {
     Box(
         modifier = Modifier
         .fillMaxSize()
@@ -44,14 +45,14 @@ fun MainScreen(matches: List<MatchDomain>) {
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             items(matches) {match ->
-                MatchInfo(match)
+                MatchInfo(match, onNotificationClick)
             }
         }
     }
 }
 
 @Composable
-fun MatchInfo(match: MatchDomain) {
+fun MatchInfo(match: MatchDomain, onNotificationClick: NotificationOnClick) {
     Card(
         shape = Shapes.large,
         modifier = Modifier.fillMaxWidth()
@@ -67,14 +68,13 @@ fun MatchInfo(match: MatchDomain) {
             Column(
                 modifier = Modifier.padding(16.dp)
             ) {
-                Notification(match)
+                Notification(match, onNotificationClick)
                 Title(match)
                 Teams(match)
             }
         }
     }
 }
-
 
 @Composable
 fun Title(match: MatchDomain) {
@@ -90,7 +90,7 @@ fun Title(match: MatchDomain) {
 }
 
 @Composable
-fun Notification(match: MatchDomain) {
+fun Notification(match: MatchDomain, onClick: NotificationOnClick) {
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.End
@@ -100,6 +100,9 @@ fun Notification(match: MatchDomain) {
 
         Image(
             painter = painterResource(id = drawable),
+            modifier = Modifier.clickable {
+                onClick(match)
+            },
             contentDescription = null
         )
     }

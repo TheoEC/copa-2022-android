@@ -8,6 +8,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import me.dio.copa.catar.core.BaseViewModel
 import me.dio.copa.catar.domain.model.MatchDomain
 import me.dio.copa.catar.domain.usecase.DisableNotificationUseCase
@@ -19,8 +20,8 @@ import javax.inject.Inject
 @HiltViewModel
 class MainViewModel @Inject constructor(
     val getMatchesUseCase: GetMatchesUseCase,
-//    val enableNotificationUseCase: EnableNotificationUseCase,
-//    val disableNotificationUseCase: DisableNotificationUseCase
+    val enableNotificationUseCase: EnableNotificationUseCase,
+    val disableNotificationUseCase: DisableNotificationUseCase,
 ): BaseViewModel<MainUIState, MainUiAction>(MainUIState()) {
 
     init {
@@ -43,15 +44,32 @@ class MainViewModel @Inject constructor(
             }
     }
 
-//    fun enableNotifications() = viewModelScope.launch { enableNotificationUseCase }
+    fun toggleNotification(matchDomain: MatchDomain) {
+        viewModelScope.launch {
+            runCatching {
+                withContext(Dispatchers.Main) {
+                    val action = if (matchDomain.notificationEnabled) {
+                        disableNotificationUseCase(matchDomain.id)
+                        MainUiAction.DisableNotificaton(matchDomain)
+                    } else {
+                        enableNotificationUseCase(matchDomain.id)
+                        MainUiAction.EnableNotificaton(matchDomain)
+                    }
 
+                    sendAction(action)
+                }
+            }
+        }
+    }
 }
 
 data class MainUIState(
     val matches: List<MatchDomain> = emptyList()
 )
 
-sealed class MainUiAction {
-    object Unexpected: MainUiAction()
-    data class MatchesNotFound(val message: String) : MainUiAction()
+sealed interface MainUiAction {
+    object Unexpected: MainUiAction
+    data class MatchesNotFound(val message: String) : MainUiAction
+    data class EnableNotificaton(val match: MatchDomain) : MainUiAction
+    data class DisableNotificaton(val match: MatchDomain) : MainUiAction
 }
